@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -87,17 +87,95 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # initialize the stack
+    frontier = util.Stack()
+    actions={}
+
+    frontier.push(problem.getStartState());
+    currentNode=(frontier.pop(),'',1);
+    actions[currentNode] = []
+    explored=[problem.getStartState()]
+
+    while problem.isGoalState(currentNode[0]) == False:
+
+        if problem.isGoalState(currentNode[0]):
+            return actions[currentNode]
+
+        for successor in problem.getSuccessors(currentNode[0]):
+            if successor[0] not in explored:
+                frontier.push(successor)
+                if isinstance(actions[currentNode],list):
+                    actions[successor] = actions[currentNode] + [successor[1]]
+                else:
+                    actions[successor] = [successor[1]]
+
+        currentNode=frontier.pop();
+        explored.append(currentNode[0])
+
+    return actions[currentNode]
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # initialize the Queue
+    frontier = util.Queue()
+    actions={}
+
+    frontier.push(problem.getStartState());
+    currentNode=(frontier.pop(),'',1);
+    actions[currentNode] = []
+    explored=[problem.getStartState()]
+
+    while problem.isGoalState(currentNode[0]) == False:
+
+        if problem.isGoalState(currentNode[0]):
+            return actions[currentNode]
+
+        for successor in problem.getSuccessors(currentNode[0]):
+            if successor[0] not in explored:
+                frontier.push(successor)
+                if isinstance(actions[currentNode],list):
+                    actions[successor] = actions[currentNode] + [successor[1]]
+                else:
+                    actions[successor] = [successor[1]]
+
+        currentNode=frontier.pop();
+        explored.append(currentNode[0])
+
+    print(len(actions[currentNode]))
+    return actions[currentNode]
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # initialize the Queue
+    frontier = util.PriorityQueue()
+    actions={}
+
+    frontier.push(problem.getStartState());
+    currentNode=(frontier.pop(),'',1);
+    actions[currentNode] = []
+    explored=[problem.getStartState()]
+
+    while problem.isGoalState(currentNode[0]) == False:
+
+        if problem.isGoalState(currentNode[0]):
+            return actions[currentNode]
+
+        for successor in problem.getSuccessors(currentNode[0]):
+            if successor[0] not in explored:
+                frontier.push(successor)
+                if isinstance(actions[currentNode],list):
+                    actions[successor] = actions[currentNode] + [successor[1]]
+                else:
+                    actions[successor] = [successor[1]]
+
+        currentNode=frontier.pop();
+        explored.append(currentNode[0])
+
+    print(len(actions[currentNode]))
+    return actions[currentNode]
 
 def nullHeuristic(state, problem=None):
     """
