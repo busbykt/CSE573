@@ -166,46 +166,25 @@ def uniformCostSearch(problem):
             print("Empty Frontier, Goal not Found.")
             return None
         node = frontier.pop()
+
+        # for bizarre test behavior...
+        if len(node) < 3:
+            node = (node,'',0)
+
         if problem.isGoalState(node[0]):
             return actions[node[0]]
         explored.append(node[0])
-
+        if node[0] not in actions.keys():
+            print(node[0], 'no actions')
         for successor in problem.getSuccessors(node[0]):
             cost = problem.getCostOfActions(actions[node[0]]+[successor[1]])
-            if successor[0] not in explored and successor[0] not in frontier.heap:
+            if (successor[0] not in explored) and (successor[0] not in [x[2][0] for x in frontier.heap]):
                 frontier.push(successor, cost)
                 actions[successor[0]] = actions[node[0]] + [successor[1]]
-            elif successor[0] in frontier.heap and cost < problem.getCostOfActions(actions[successor[0]]):
+                explored.append(successor[0])
+            elif (successor[0] in [x[2][0] for x in frontier.heap]) and (cost < problem.getCostOfActions(actions[successor[0]])):
                 frontier.update(successor, cost)
                 actions[successor[0]] = actions[node[0]] + [successor[1]]
-
-    # # initialize the Queue
-    # frontier = util.PriorityQueue()
-    # frontier_list=[]
-    # actions={}
-    #
-    # frontier.push(problem.getStartState(), 0);
-    # frontier_list.append(problem.getStartState())
-    # currentNode=(frontier.pop(),'',1);
-    # actions[currentNode] = []
-    # explored=[problem.getStartState()]
-    #
-    # while problem.isGoalState(currentNode[0]) == False:
-    #
-    #     for successor in problem.getSuccessors(currentNode[0]):
-    #         if successor[0] not in explored and successor[0] not in frontier_list:
-    #             cost = problem.getCostOfActions(actions[currentNode]+[successor[1]])
-    #             frontier.push(successor,cost)
-    #             frontier_list.append(successor[0])
-    #             if isinstance(actions[currentNode],list):
-    #                 actions[successor] = actions[currentNode] + [successor[1]]
-    #             else:
-    #                 actions[successor] = [successor[1]]
-    #
-    #     currentNode=frontier.pop();
-    #     explored.append(currentNode[0])
-    #
-    # return actions[currentNode]
 
 def nullHeuristic(state, problem=None):
     """
@@ -217,7 +196,39 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    frontier = util.PriorityQueue()
+    explored=[]
+    actions={}
+
+    frontier.push(problem.getStartState(),0)
+    node=(problem.getStartState(),'',0)
+    actions[node[0]] = []
+    i=True;
+    while i==True:
+        if frontier.isEmpty():
+            print("Empty Frontier, Goal not Found.")
+            return None
+        node = frontier.pop()
+
+        # for bizarre test behavior...
+        if len(node) < 3:
+            node = (node,'',0)
+
+        if problem.isGoalState(node[0]):
+            return actions[node[0]]
+        explored.append(node[0])
+        if node[0] not in actions.keys():
+            print(node[0], 'no actions')
+        for successor in problem.getSuccessors(node[0]):
+            cost = problem.getCostOfActions(actions[node[0]]+[successor[1]]) + heuristic(successor[0], problem)
+            if (successor[0] not in explored) and (successor[0] not in [x[2][0] for x in frontier.heap]):
+                frontier.push(successor, cost)
+                actions[successor[0]] = actions[node[0]] + [successor[1]]
+                explored.append(successor[0])
+            elif (successor[0] in [x[2][0] for x in frontier.heap]) and (cost < problem.getCostOfActions(actions[successor[0]])+heuristic(successor[0], problem)):
+                frontier.update(successor, cost)
+                actions[successor[0]] = actions[node[0]] + [successor[1]]
+
 
 
 # Abbreviations
