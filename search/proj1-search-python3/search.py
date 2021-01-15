@@ -118,36 +118,26 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    # initialize the Queue
-    frontier = util.Queue()
-    frontier_list=[]
+
+    currentState = problem.getStartState();
+    frontier = util.Queue();
+    frontier_list = []
     actions={}
 
-    frontier.push(problem.getStartState());
-    frontier_list.append(problem.getStartState())
-    currentNode=(frontier.pop(),'',1);
-    actions[currentNode] = []
-    explored=[problem.getStartState()]
+    actions[currentState] = []
+    explored=[]
 
-    while problem.isGoalState(currentNode[0]) == False:
-
-        if problem.isGoalState(currentNode[0]):
-            return actions[currentNode]
-
-        for successor in problem.getSuccessors(currentNode[0]):
+    while problem.isGoalState(currentState) == False:
+        explored.append(currentState)
+        if problem.isGoalState(currentState):
+            return actions[currentState]
+        for successor in problem.getSuccessors(currentState):
             if successor[0] not in explored and successor[0] not in frontier_list:
-                frontier.push(successor)
+                frontier.push(successor[0])
                 frontier_list.append(successor[0])
-                if isinstance(actions[currentNode],list):
-                    actions[successor] = actions[currentNode] + [successor[1]]
-                else:
-                    actions[successor] = [successor[1]]
-
-        currentNode=frontier.pop();
-        explored.append(currentNode[0])
-
-    print(len(actions[currentNode]))
-    return actions[currentNode]
+                actions[successor[0]] = actions[currentState] + [successor[1]]
+        currentState=frontier.pop()
+    return actions[currentState]
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
