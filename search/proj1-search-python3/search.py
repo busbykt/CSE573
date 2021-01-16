@@ -129,8 +129,6 @@ def breadthFirstSearch(problem):
 
     while problem.isGoalState(currentState) == False:
         explored.append(currentState)
-        if problem.isGoalState(currentState):
-            return actions[currentState]
         for successor in problem.getSuccessors(currentState):
             if successor[0] not in explored and successor[0] not in frontier_list:
                 frontier.push(successor[0])

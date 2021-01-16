@@ -290,7 +290,6 @@ class CornersProblem(search.SearchProblem):
         "*** YOUR CODE HERE ***"
         self.costFn = costFn
         self._visited, self._visitedlist = {},[]
-        self.startState = (self.startingPosition,self.corners,())
         self.visualize=visualize
 
     def getStartState(self):
@@ -299,19 +298,17 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return self.startState
+        return (self.startingPosition,self.corners,())
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        # print(self._visitedlist)
-        x = state[0][0]
-        y = state[0][1]
-        if (x,y) not in self._visited:
-            self._visited[(x,y)] = True
-            self._visitedlist.append((x,y))
+        # print('currentlocation:',state[0])
+        # print('corners:',state[1])
+        # print('visited:',set(state[2]))
+        #input()
         if set([x for x in state[1]]).issubset(state[2]):
             isGoal = True
         else:
@@ -336,15 +333,16 @@ class CornersProblem(search.SearchProblem):
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
-                nextState = ((nextx, nexty), self.corners,tuple(self._visitedlist))
+                if (nextx,nexty) in self.corners:
+                    myCorners = state[2] + ((nextx,nexty),)
+                else:
+                    myCorners = state[2]
+                nextState = ((nextx, nexty),self.corners,myCorners)
                 cost = self.costFn(nextState)
                 successors.append( ( nextState, action, cost) )
 
         # Bookkeeping for display purposes
         self._expanded += 1 # DO NOT CHANGE
-        if (x,y) not in self._visited:
-            self._visited[(x,y)] = True
-            self._visitedlist.append((x,y))
         return successors
 
     def getCostOfActions(self, actions):
