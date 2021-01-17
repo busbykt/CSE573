@@ -135,6 +135,7 @@ def breadthFirstSearch(problem):
                 frontier_list.append(successor[0])
                 actions[successor[0]] = actions[currentState] + [successor[1]]
         currentState=frontier.pop()
+        frontier_list.remove(currentState)
     return actions[currentState]
 
 def uniformCostSearch(problem):
@@ -184,38 +185,34 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+
     frontier = util.PriorityQueue()
+    node = problem.getStartState()
+    frontier.push(node,0)
     explored=[]
     actions={}
+    actions[node] = []
 
-    frontier.push(problem.getStartState(),0)
-    node=(problem.getStartState(),'',0)
-    actions[node[0]] = []
     i=True;
     while i==True:
         if frontier.isEmpty():
-            print("Empty Frontier, Goal not Found.")
+            print('Empty Frontier')
             return None
-        node = frontier.pop()
 
-        # for bizarre test behavior...
-        if len(node) < 3:
-            node = (node,'',0)
+        CurNode = frontier.pop()
+        if problem.isGoalState(CurNode):
+            return actions[CurNode]
 
-        if problem.isGoalState(node[0]):
-            return actions[node[0]]
-        explored.append(node[0])
-        if node[0] not in actions.keys():
-            print(node[0], 'no actions')
-        for successor in problem.getSuccessors(node[0]):
-            cost = problem.getCostOfActions(actions[node[0]]+[successor[1]]) + heuristic(successor[0], problem)
-            if (successor[0] not in explored) and (successor[0] not in [x[2][0] for x in frontier.heap]):
-                frontier.push(successor, cost)
-                actions[successor[0]] = actions[node[0]] + [successor[1]]
-                explored.append(successor[0])
-            elif (successor[0] in [x[2][0] for x in frontier.heap]) and (cost < problem.getCostOfActions(actions[successor[0]])+heuristic(successor[0], problem)):
-                frontier.update(successor, cost)
-                actions[successor[0]] = actions[node[0]] + [successor[1]]
+        explored.append(CurNode)
+
+        for successor in problem.getSuccessors(CurNode):
+            cost = problem.getCostOfActions(actions[CurNode] + [successor[1]])+heuristic(successor[0],problem)
+            if successor[0] not in explored and successor[0] not in [x[2] for x in frontier.heap]:
+                frontier.push(successor[0],cost)
+                actions[successor[0]] = actions[CurNode]+[successor[1]]
+            elif successor[0] in [x[2] for x in frontier.heap] and cost < problem.getCostOfActions(actions[successor[0]])+heuristic(successor[0], problem):
+                frontier.update(successor[0],cost)
+                actions[successor[0]] = actions[CurNode]+[successor[1]]
 
 
 
