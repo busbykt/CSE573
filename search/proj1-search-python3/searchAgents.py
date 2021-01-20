@@ -273,7 +273,7 @@ class CornersProblem(search.SearchProblem):
     You must select a suitable state space and successor function
     """
 
-    def __init__(self, startingGameState, costFn = lambda x: 1, visualize=True):
+    def __init__(self, startingGameState):
         """
         Stores the walls, pacman's starting position and corners.
         """
@@ -288,9 +288,9 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        self.costFn = costFn
+        self.costFn = lambda x: 1
         self._visited, self._visitedlist = {},[]
-        self.visualize=visualize
+        self.startState = (self.startingPosition,())
 
     def getStartState(self):
         """
@@ -298,7 +298,7 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return (self.startingPosition,())
+        return self.startState
 
     def isGoalState(self, state):
         """
@@ -321,11 +321,13 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
+        if state not in self._visitedlist:
+            self._visitedlist.append(state)
 
         successors = []
-        x = state[0][0]
-        y = state[0][1]
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+            x = state[0][0]
+            y = state[0][1]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
@@ -334,11 +336,14 @@ class CornersProblem(search.SearchProblem):
                 else:
                     myCorners = state[1]
                 nextState = ((nextx, nexty),myCorners)
-                cost = self.costFn(nextState)
-                successors.append( ( nextState, action, cost) )
+                cost = 1
+
+                if nextState not in self._visitedlist:
+                    successors.append( ( nextState, action, cost) )
 
         # Bookkeeping for display purposes
         self._expanded += 1 # DO NOT CHANGE
+
         return successors
 
     def getCostOfActions(self, actions):
@@ -372,13 +377,13 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    # if state[0] in corners and state[0] not in state[1]:
-    #     return len(corners)-len(state[1])-1
-    # else:
-    #     return len(state[1])
-    return(len(state[1]))
 
-    return 0 # Default to trivial solution
+    if len(state[1]) == 4:
+        return 0
+    if state[0] in corners and state[0] not in state[1]:
+        return 0
+    else:
+        return 1
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -401,7 +406,6 @@ class FoodSearchProblem:
         self.startingGameState = startingGameState
         self._expanded = 0 # DO NOT CHANGE
         self.heuristicInfo = {} # A dictionary for the heuristic to store information
-        self.heuristicInfo['wallCount'] = self.walls.count()
 
     def getStartState(self):
         return self.start
@@ -479,9 +483,17 @@ def foodHeuristic(state, problem):
         return numFood-1
     else:
         return numFood
-
-
-    return 0
+    # l1Dists=[]
+    #
+    # if foodGrid.count() == 0:
+    #     return 0
+    #
+    # for dot in foodGrid.asList():
+    #     l1Dists.append(l1Dist(position,dot))
+    #
+    # return min(l1Dists)
+    #
+    # return 0
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
