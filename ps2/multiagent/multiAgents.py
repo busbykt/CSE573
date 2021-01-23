@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -71,10 +71,71 @@ class ReflexAgent(Agent):
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
+        newGhostPositions = [x.configuration.pos for x in newGhostStates]
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        curPos = currentGameState.getPacmanPosition()
+        curFood = currentGameState.getFood()
+
+        score=0
+        #
+        # print('gamestate:',successorGameState)
+        # print('newPos:',newPos)
+        # print('newFood:',newFood.asList())
+        # print('newGhostPos:',[x.configuration.pos for x in newGhostStates])
+        # print('newScaredTimes:',newScaredTimes)
+        # print('successorGameState.getScore():',successorGameState.getScore())
+        #
+
+        newfoodDists=[]
+        curfoodDists=[]
+        # get current and new food distances
+        for foodPos in newFood.asList():
+            newfoodDists.append(l1Dist(newPos,foodPos))
+            curfoodDists.append(l1Dist(curPos,foodPos))
+
+        newfoodDists.sort()
+        curfoodDists.sort()
+
+        n = len(newfoodDists)
+
+        # increase score if closer to remaining food weighted by distances
+        if newfoodDists:
+            if n>5 and sum(newfoodDists[:5]) < sum(curfoodDists[:5]):
+                score = score+1
+            if newfoodDists[0] < curfoodDists[0]:
+                score = score+5
+
+        x,y = newPos
+        if curFood[x][y] == True:
+            score = score+10
+
+        # decrease score if close to ghost
+        for newGhostPos in newGhostPositions:
+            if sum(newScaredTimes) == 0:
+                if l1Dist(newPos,newGhostPos)==2:
+                    score = score-5
+                if l1Dist(newPos,newGhostPos)==1:
+                    score = score-100
+                if l1Dist(newPos,newGhostPos)==0:
+                    score = score-500
+            elif sum(newScaredTimes) > 2:
+                if l1Dist(newPos,newGhostPos)==2:
+                    score = score+5
+                if l1Dist(newPos,newGhostPos)==1:
+                    score = score+10
+                if l1Dist(newPos,newGhostPos)==0:
+                    score = score+100
+
+        # incentivize moving
+        if curPos == newPos:
+            score = score-1
+
+        return score
+
+def l1Dist(a,b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def scoreEvaluationFunction(currentGameState):
     """
