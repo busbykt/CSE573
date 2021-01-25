@@ -79,14 +79,6 @@ class ReflexAgent(Agent):
         curFood = currentGameState.getFood()
 
         score=0
-        #
-        # print('gamestate:',successorGameState)
-        # print('newPos:',newPos)
-        # print('newFood:',newFood.asList())
-        # print('newGhostPos:',[x.configuration.pos for x in newGhostStates])
-        # print('newScaredTimes:',newScaredTimes)
-        # print('successorGameState.getScore():',successorGameState.getScore())
-        #
 
         newfoodDists=[]
         curfoodDists=[]
@@ -196,7 +188,52 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        depth = self.depth;
+
+        # create a utility vector
+        v=[float('-inf') for x in range(len(gameState.getLegalActions()))]
+        # instantiate a dictionary to hold actions
+        actions={}
+
+        # get the number of agents
+        numAgents = gameState.getNumAgents()
+
+        for action in gameState.getLegalActions():
+            actions[action] = minValue(gameState.generateSuccessor(0,action), numAgents, moves=depth*numAgents)
+
+        return max(actions,key=actions.get)
+
+
+def maxValue(state, numAgents, moves):
+
+    moves = moves-1
+
+    if state.isWin() or state.isLose() or moves<=0:
+        return scoreEvaluationFunction(state)
+
+    v=float('-inf')
+
+    for action in state.getLegalActions(0):
+        v=max([v]+minValue(state.generateSuccessor(0,action),numAgents,moves))
+
+    return v
+
+def minValue(state, numAgents, moves):
+
+    if state.isWin() or state.isLose() or moves<=1:
+        return [scoreEvaluationFunction(state)]
+
+    v=[float('inf') for i in range(numAgents)]
+
+    for agent in range(1,numAgents):
+        moves = moves-1
+        for action in state.getLegalActions(agent):
+            v[agent] = min([v[agent], maxValue(state.generateSuccessor(agent,action),numAgents,moves)])
+
+    return v[1:]
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
