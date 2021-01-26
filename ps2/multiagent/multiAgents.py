@@ -189,51 +189,100 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        depth = self.depth;
-
-        # create a utility vector
-        v=[float('-inf') for x in range(len(gameState.getLegalActions()))]
-        # instantiate a dictionary to hold actions
         actions={}
-
-        # get the number of agents
-        numAgents = gameState.getNumAgents()
-
-        for action in gameState.getLegalActions():
-            actions[action] = minValue(gameState.generateSuccessor(0,action), numAgents, moves=depth*numAgents)
-
-        return max(actions,key=actions.get)
+        for action in gameState.getLegalActions(0):
+            v = value(gameState.generateSuccessor(0,action), self.evaluationFunction, self.depth*gameState.getNumAgents(),0)
+            actions[action] = v
+        return max(actions, key=actions.get)
 
 
-def maxValue(state, numAgents, moves):
 
+def value(state, evalfn,moves,agent):
+
+    # keep track of the depth
     moves = moves-1
 
-    if state.isWin() or state.isLose() or moves<=0:
-        return scoreEvaluationFunction(state)
+    # keep track of the agent
+    agent = (agent +1)%state.getNumAgents()
+
+    # if state is terminal state, return state utility
+    if state.isWin() or state.isLose() or moves==0:
+        return evalfn(state)
+
+    # if next agent is max return max-value(state)
+    if agent == 0:
+        return maxValue(state,agent,evalfn,moves)
+    # if next agent is min return min-value(state)
+    if agent > 0:
+        return minValue(state,agent,evalfn,moves)
+
+
+def maxValue(state,agent,evalfn,moves):
 
     v=float('-inf')
-
-    for action in state.getLegalActions(0):
-        v=max([v]+minValue(state.generateSuccessor(0,action),numAgents,moves))
-
+    for action in state.getLegalActions(agent):
+        successor = state.generateSuccessor(agent,action)
+        v=max(v,value(successor,evalfn,moves,agent))
     return v
 
-def minValue(state, numAgents, moves):
+def minValue(state,agent,evalfn,moves):
 
-    if state.isWin() or state.isLose() or moves<=1:
-        return [scoreEvaluationFunction(state)]
-
-    v=[float('inf') for i in range(numAgents)]
-
-    for agent in range(1,numAgents):
-        moves = moves-1
-        for action in state.getLegalActions(agent):
-            v[agent] = min([v[agent], maxValue(state.generateSuccessor(agent,action),numAgents,moves)])
-
-    return v[1:]
+    v=float('inf')
+    for action in state.getLegalActions(agent):
+        successor = state.generateSuccessor(agent,action)
+        v=min(v,value(successor,evalfn,moves,agent))
+    return v
 
 
+
+
+
+#         depth = self.depth;
+#         eval = self.evaluationFunction;
+#
+#         # create a utility vector
+#         v=[float('-inf') for x in range(len(gameState.getLegalActions()))]
+#         # instantiate a dictionary to hold actions
+#         actions={}
+#
+#         # get the number of agents
+#         numAgents = gameState.getNumAgents()
+#
+#         for action in gameState.getLegalActions():
+#             actions[action] = minValue(gameState.generateSuccessor(0,action), numAgents, eval, moves=depth*numAgents)
+#
+#         print(actions)
+#         return max(actions,key=actions.get)
+#
+# def maxValue(state, numAgents, eval,moves):
+#
+#     moves = moves-1
+#
+#     if state.isWin() or state.isLose() or moves<=0:
+#         print('eval',eval(state))
+#         return eval(state)
+#
+#     v=float('-inf')
+#
+#     for action in state.getLegalActions(0):
+#         v=max([v]+minValue(state.generateSuccessor(0,action),numAgents,eval,moves))
+#
+#     return v
+#
+# def minValue(state, numAgents, eval,moves):
+#
+#     if state.isWin() or state.isLose() or moves<=1:
+#         return [eval(state)]
+#
+#     v=[float('inf') for i in range(numAgents)]
+#
+#     for agent in range(1,numAgents):
+#         moves = moves-1
+#         for action in state.getLegalActions(agent):
+#             v[agent] = min([v[agent], maxValue(state.generateSuccessor(agent,action),numAgents,eval,moves)])
+#
+#     print(v)
+#     return v[1:]
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
