@@ -158,6 +158,9 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+        self.a=float('-inf')
+        self.b=float('inf')
+
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -234,56 +237,6 @@ def minValue(state,agent,evalfn,moves):
     return v
 
 
-
-
-
-#         depth = self.depth;
-#         eval = self.evaluationFunction;
-#
-#         # create a utility vector
-#         v=[float('-inf') for x in range(len(gameState.getLegalActions()))]
-#         # instantiate a dictionary to hold actions
-#         actions={}
-#
-#         # get the number of agents
-#         numAgents = gameState.getNumAgents()
-#
-#         for action in gameState.getLegalActions():
-#             actions[action] = minValue(gameState.generateSuccessor(0,action), numAgents, eval, moves=depth*numAgents)
-#
-#         print(actions)
-#         return max(actions,key=actions.get)
-#
-# def maxValue(state, numAgents, eval,moves):
-#
-#     moves = moves-1
-#
-#     if state.isWin() or state.isLose() or moves<=0:
-#         print('eval',eval(state))
-#         return eval(state)
-#
-#     v=float('-inf')
-#
-#     for action in state.getLegalActions(0):
-#         v=max([v]+minValue(state.generateSuccessor(0,action),numAgents,eval,moves))
-#
-#     return v
-#
-# def minValue(state, numAgents, eval,moves):
-#
-#     if state.isWin() or state.isLose() or moves<=1:
-#         return [eval(state)]
-#
-#     v=[float('inf') for i in range(numAgents)]
-#
-#     for agent in range(1,numAgents):
-#         moves = moves-1
-#         for action in state.getLegalActions(agent):
-#             v[agent] = min([v[agent], maxValue(state.generateSuccessor(agent,action),numAgents,eval,moves)])
-#
-#     print(v)
-#     return v[1:]
-
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
@@ -294,7 +247,68 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        actions={}
+
+
+        for action in gameState.getLegalActions(0):
+            v = self.abvalue(state=gameState.generateSuccessor(0,action),
+                        evalfn=self.evaluationFunction,
+                        moves=self.depth*gameState.getNumAgents(),
+                        agent=0,
+                        a=self.a,
+                        b=self.b)
+            actions[action] = v
+        return max(actions, key=actions.get)
+
+    def abvalue(self,state, evalfn,moves,agent,a,b):
+
+        # keep track of the depth
+        moves = moves-1
+
+        print('agent',agent)
+        print('a',self.a)
+        print('b',self.b)
+        input()
+
+        # keep track of the agent
+        agent = (agent +1)%state.getNumAgents()
+
+        # if state is terminal state, return state utility
+        if state.isWin() or state.isLose() or moves==0:
+            return evalfn(state)
+
+        # if next agent is max return max-value(state)
+        if agent == 0:
+            return self.abmaxValue(state,agent,evalfn,moves,self.a,self.b)
+        # if next agent is min return min-value(state)
+        if agent > 0:
+            return self.abminValue(state,agent,evalfn,moves,self.a,self.b)
+
+
+    def abmaxValue(self,state,agent,evalfn,moves,a,b):
+
+        v=float('-inf')
+        for action in state.getLegalActions(agent):
+            successor = state.generateSuccessor(agent,action)
+            vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
+            v=max(v,vn)
+            if v>self.b: return v
+            self.a=max(self.a,v)
+        return v
+
+    def abminValue(self,state,agent,evalfn,moves,a,b):
+
+        v=float('inf')
+        for action in state.getLegalActions(agent):
+            successor = state.generateSuccessor(agent,action)
+            vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
+            v=min(v,vn)
+            if v<self.a: return v
+            self.b=min(self.b,v)
+        return v
+
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
