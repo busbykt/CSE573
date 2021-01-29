@@ -250,14 +250,16 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         actions={}
 
-
         for action in gameState.getLegalActions(0):
-            v = self.abvalue(state=gameState.generateSuccessor(0,action),
+            nextState = gameState.generateSuccessor(0,action)
+            v = self.abvalue(state=nextState,
                         evalfn=self.evaluationFunction,
                         moves=self.depth*gameState.getNumAgents(),
                         agent=0,
                         a=self.a,
-                        b=self.b)
+                        b=float('inf'))
+            self.a = max(self.a,v)
+            self.b = float('inf')
             actions[action] = v
         return max(actions, key=actions.get)
 
@@ -266,13 +268,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         # keep track of the depth
         moves = moves-1
 
-        print('agent',agent)
-        print('a',self.a)
-        print('b',self.b)
-        input()
-
         # keep track of the agent
-        agent = (agent +1)%state.getNumAgents()
+        agent = (agent+1)%state.getNumAgents()
 
         # if state is terminal state, return state utility
         if state.isWin() or state.isLose() or moves==0:
@@ -293,6 +290,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             successor = state.generateSuccessor(agent,action)
             vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
             v=max(v,vn)
+
             if v>self.b: return v
             self.a=max(self.a,v)
         return v
@@ -304,6 +302,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             successor = state.generateSuccessor(agent,action)
             vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
             v=min(v,vn)
+
             if v<self.a: return v
             self.b=min(self.b,v)
         return v
