@@ -249,17 +249,17 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         "*** YOUR CODE HERE ***"
 
         actions={}
-
         for action in gameState.getLegalActions(0):
             nextState = gameState.generateSuccessor(0,action)
+            self.b=float('inf')
             v = self.abvalue(state=nextState,
                         evalfn=self.evaluationFunction,
                         moves=self.depth*gameState.getNumAgents(),
                         agent=0,
                         a=self.a,
-                        b=float('inf'))
+                        b=self.b)
             self.a = max(self.a,v)
-            self.b = float('inf')
+            #self.b = float('inf')
             actions[action] = v
         return max(actions, key=actions.get)
 
@@ -291,6 +291,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
             v=max(v,vn)
 
+            print('agent',agent)
+            print('v',v)
+            print('b',b)
+            print('a',a)
+            input()
+
             if v>self.b: return v
             self.a=max(self.a,v)
         return v
@@ -302,6 +308,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             successor = state.generateSuccessor(agent,action)
             vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
             v=min(v,vn)
+
+            print('agent',agent)
+            print('v',v)
+            print('b',b)
+            print('a',a)
+            input()
 
             if v<self.a: return v
             self.b=min(self.b,v)
@@ -322,7 +334,46 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions={}
+        for action in gameState.getLegalActions(0):
+            v = self.evalue(gameState.generateSuccessor(0,action), self.evaluationFunction, self.depth*gameState.getNumAgents(),0)
+            actions[action] = v
+        return max(actions, key=actions.get)
+
+
+    def evalue(self,state,evalfn,moves,agent):
+
+        # keep track of the depth
+        moves = moves-1
+
+        # keep track of the agent
+        agent = (agent +1)%state.getNumAgents()
+
+        # if state is terminal state, return state utility
+        if state.isWin() or state.isLose() or moves==0:
+            return evalfn(state)
+
+        # if next agent is max return max-value(state)
+        if agent == 0:
+            return self.emaxValue(state,agent,evalfn,moves)
+        # if next agent is min return min-value(state)
+        if agent > 0:
+            return self.expValue(state,agent,evalfn,moves)
+
+    def emaxValue(self, state, agent,evalfn,moves):
+        v=float('-inf')
+        for action in state.getLegalActions(0):
+            successor = state.generateSuccessor(0,action)
+            v=max(v,self.evalue(successor,evalfn,moves,agent))
+        return v
+
+    def expValue(self, state, agent,evalfn,moves):
+        v=0
+        numActions = len(state.getLegalActions(agent))
+        for action in state.getLegalActions(agent):
+            successor = state.generateSuccessor(agent,action)
+            v+=1/numActions*self.evalue(successor,evalfn,moves,agent)
+        return v
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -332,7 +383,121 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pacPos = currentGameState.getPacmanPosition()
+    numFood = currentGameState.getNumFood()
+    foodGrid = currentGameState.getFood()
+    ghostStates = currentGameState.getGhostStates()
+    ghostPositions = [x.configuration.pos for x in ghostStates]
+    ScaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+
+    # feature 1 is 1 over the number of food pellets left
+    w1=1
+    if numFood < 1:
+        numFood=.5
+    f1 = 1/numFood
+
+    # feature 2 is 1 over sum of l1 distances to all food
+    w2=1
+    curfoodDists=[]
+    for foodPos in foodGrid.asList():
+        curfoodDists.append(l1Dist(pacPos,foodPos))
+    curfoodDists.sort()
+    curfoodDist = sum(curfoodDists)
+    if curfoodDist < 1:
+        curfoodDist=.5
+    if len(curfoodDists) == 0:
+        w1=10
+    f2=1/curfoodDist
+
+    # feature 3 is distance to closest ghost
+    w3=1
+
+    ghostDists = [l1Dist(pacPos,ghostPos) for ghostPos in ghostPositions]
+    ghostPos = [x for _,x in sorted(zip(ghostDists,ghostPositions))][0]
+
+    f3=0
+    if sum(ScaredTimes) > 2:
+        if l1Dist(pacPos,ghostPos)>2:
+            f3 = -1
+        if l1Dist(pacPos,ghostPos)==2:
+            f3 = 2
+        if l1Dist(pacPos,ghostPos)==1:
+            f3 = 10
+        if l1Dist(pacPos,ghostPos)==0:
+            f3 = 500
+    else:
+        if l1Dist(pacPos,ghostPos)>2:
+            f3 = 1
+        if l1Dist(pacPos,ghostPos)==2:
+            f3 = -2
+        if l1Dist(pacPos,ghostPos)==1:
+            f3 = -10
+        if l1Dist(pacPos,ghostPos)==0:
+            f3 = -500
+
+    return w1*f1+w2*f2+w3*f3
+
+    # successorGameState = currentGameState.generatePacmanSuccessor(action)
+    # newPos = successorGameState.getPacmanPosition()
+    # newFood = successorGameState.getFood()
+    # newGhostStates = successorGameState.getGhostStates()
+    # newGhostPositions = [x.configuration.pos for x in newGhostStates]
+    # newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+    #
+    # "*** YOUR CODE HERE ***"
+    # curPos = currentGameState.getPacmanPosition()
+    # curFood = currentGameState.getFood()
+    #
+    # score=0
+    #
+    # newfoodDists=[]
+    # curfoodDists=[]
+    # # get current and new food distances
+    # for foodPos in newFood.asList():
+    #     newfoodDists.append(l1Dist(newPos,foodPos))
+    #     curfoodDists.append(l1Dist(curPos,foodPos))
+    #
+    # newfoodDists.sort()
+    # curfoodDists.sort()
+    #
+    # n = len(newfoodDists)
+    #
+    # # increase score if closer to remaining food weighted by distances
+    # if newfoodDists:
+    #     if n>5 and sum(newfoodDists[:5]) < sum(curfoodDists[:5]):
+    #         score = score+1
+    #     if newfoodDists[0] < curfoodDists[0]:
+    #         score = score+5
+    #
+    # x,y = newPos
+    # if curFood[x][y] == True:
+    #     score = score+10
+    #
+    # # decrease score if close to ghost
+    # for newGhostPos in newGhostPositions:
+    #     if sum(newScaredTimes) == 0:
+    #         if l1Dist(newPos,newGhostPos)==2:
+    #             score = score-5
+    #         if l1Dist(newPos,newGhostPos)==1:
+    #             score = score-100
+    #         if l1Dist(newPos,newGhostPos)==0:
+    #             score = score-500
+    #     elif sum(newScaredTimes) > 2:
+    #         if l1Dist(newPos,newGhostPos)==2:
+    #             score = score+5
+    #         if l1Dist(newPos,newGhostPos)==1:
+    #             score = score+10
+    #         if l1Dist(newPos,newGhostPos)==0:
+    #             score = score+100
+    #
+    # # incentivize moving
+    # if curPos == newPos:
+    #     score = score-1
+    #
+    # return score
+
+
+
 
 # Abbreviation
 better = betterEvaluationFunction
