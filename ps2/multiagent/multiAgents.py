@@ -290,13 +290,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             successor = state.generateSuccessor(agent,action)
             vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
             v=max(v,vn)
-
-            print('agent',agent)
-            print('v',v)
-            print('b',b)
-            print('a',a)
-            input()
-
             if v>self.b: return v
             self.a=max(self.a,v)
         return v
@@ -308,13 +301,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             successor = state.generateSuccessor(agent,action)
             vn = self.abvalue(successor,evalfn,moves,agent,self.a,self.b)
             v=min(v,vn)
-
-            print('agent',agent)
-            print('v',v)
-            print('b',b)
-            print('a',a)
-            input()
-
             if v<self.a: return v
             self.b=min(self.b,v)
         return v
