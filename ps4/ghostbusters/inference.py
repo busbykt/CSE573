@@ -358,7 +358,10 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        numParticles = self.numParticles
+        for pos in self.legalPositions:
+            self.particles.append(numParticles/len(self.legalPositions))
+
 
     def observeUpdate(self, observation, gameState):
         """
@@ -373,7 +376,19 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+
+        pacPos = gameState.getPacmanPosition()
+        jailPos = self.getJailPosition()
+        noisyDist = observation
+
+        beliefs = self.getBeliefDistribution()
+
+        for i,pos in enumerate(beliefs):
+            beliefs[pos] = self.getObservationProb(noisyDist, pacPos, pos, jailPos)*beliefs[pos]
+            self.particles[i] = beliefs[pos]
+
+        if beliefs.total() == 0:
+            self.initializeUniformly(gameState)
 
     def elapseTime(self, gameState):
         """
@@ -381,7 +396,19 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+
+        #cumNewPosDist = {}
+
+        dist = self.getBeliefDistribution()
+
+        self.particles=[]
+        for i,pos in enumerate(self.legalPositions):
+            newPosDist = self.getPositionDistribution(gameState, pos)
+            dist[pos] = dist[pos]*newPosDist[newPosDist.sample()]+newPosDist[pos]
+
+        for pos in self.allPositions:
+            self.particles.append(dist[dist.sample()])
+
 
     def getBeliefDistribution(self):
         """
@@ -392,8 +419,15 @@ class ParticleFilter(InferenceModule):
         This function should return a normalized distribution.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
 
+        beliefs = DiscreteDistribution()
+
+        for i,pos in enumerate(self.legalPositions):
+            beliefs[pos] = self.particles[i]
+
+        beliefs.normalize()
+
+        return beliefs
 
 class JointParticleFilter(ParticleFilter):
     """
@@ -420,7 +454,14 @@ class JointParticleFilter(ParticleFilter):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+
+        numParticles = self.numParticles
+        dist = list(itertools.product(self.legalPositions, repeat=self.numGhosts))
+        random.shuffle(dist)
+
+        for pos in dist:
+            self.particles.append(numParticles/(self.numGhosts*len(self.legalPositions)))
+
 
     def addGhostAgent(self, agent):
         """
